@@ -1,0 +1,9 @@
+@use './palette';
+
+.border-gray {
+	border: 1px solid palette.$border-gray;
+}
+
+.bg-green {
+	background-color: palette.$green;
+}
