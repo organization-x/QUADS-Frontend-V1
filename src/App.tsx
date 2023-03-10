@@ -1,8 +1,9 @@
-import './App.scss';
+import IndexPage from "./pages";
 
+// routing here in the future
 function App() {
 	return (
-		<h1>Hello World</h1>
+		<IndexPage />
 	);
 }
 
