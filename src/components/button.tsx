@@ -10,7 +10,7 @@ type Props = {
 const colorMap = {
 	gray: s.gray,
 	green: s.green
-}
+};
 
 function Button({ onClick, className, children, bg }: Props) {
 	return (

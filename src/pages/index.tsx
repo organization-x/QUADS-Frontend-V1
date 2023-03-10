@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import Button from '../components/button';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import s from '../styles/index.module.scss';
 import { faArrowRight } from '@fortawesome/free-solid-svg-icons';
 import Overlay from '../components/overlay';
@@ -60,8 +60,8 @@ function IndexPage() {
 						<h4 className='mb-5 text-2xl font-bold'>{answer.q}</h4>
 						<p>{answer.a}</p>
 					</div>
-				:
-				null
+					:
+					null
 			}
 			<Overlay show={showOverlay} className='max-w-2xl mx-auto px-5'>
 				<div className='bg-white py-10 px-20 rounded-2xl mt-20 md:mt-40'>
