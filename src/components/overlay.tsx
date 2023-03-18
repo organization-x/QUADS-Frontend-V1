@@ -8,7 +8,7 @@ type Props = {
 
 function Overlay({ children, className, show }: Props) {
 	return (
-		<div className={s['overlay-container'] + (show ? ' block' : ' hidden')}>
+		<div className={s['overlay-container'] + ' ' + (show ? s.show : '')}>
 			<div className={(className ? className : '')}>
 				{children}
 			</div>
