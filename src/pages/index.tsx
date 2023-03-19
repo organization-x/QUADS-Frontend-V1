@@ -1,14 +1,12 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import Button from '../components/button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import s from '../styles/index.module.scss';
 import { faArrowRight } from '@fortawesome/free-solid-svg-icons';
-import Overlay from '../components/overlay';
 import Document from '../components/document';
 import UploadIcon from '../assets/upload.svg';
-import UploadDarkIcon from '../assets/upload_dark.svg';
-import IngestIcon from '../assets/ingest.svg';
-import protectedFetch from '../utils/fetch';
+import CiteIcon from '../assets/cite.svg';
+import UploadOverlay from './upload';
 
 type Source = {
 	name: string,
@@ -21,36 +19,14 @@ type Answer = {
 	sources: Source[]
 };
 
-const API_URL = import.meta.env.VITE_API_URL;
-
-const ALLOWED_FILES = ['text/plain', 'text/markdown'];
-
 function IndexPage() {
 	const [question, setQuestion] = useState('');
-	const [files, setFiles] = useState<File[]>([]);
 	const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
 	const [answer, setAnswer] = useState<null | Answer>(null);
 	const [processingAnswer, setProcessingAnswer] = useState(false);
-	const [processingUpload, setProcessingUpload] = useState(false);
 	const [showUploadOverlay, setShowUploadOverlay] = useState(false);
-	const FileInput = useRef<HTMLInputElement>(null);
-
-	const filesJSX = [];
-	if (files.length) {
-		for (let i = 0; i < files.length; i++) {
-			const file = files[i];
-			filesJSX.push(
-				<li className='mb-3 flex flex-row' key={i}>
-					<span 
-						className={'mt-[0.35rem] w-3 h-3 rounded-full inline-block align-middle mr-3 ' + s['bg-dot-gray']} 
-					/>
-					<span className='inline-block'>
-						{file.name}
-					</span>
-				</li>
-			);
-		}
-	}
+	const [showSourceOverlay, setShowSourceOverlay] = useState(false);
+	const [viewedSource, setViewedSource] = useState<Source>();
 
 	const uploadedFilesJSX = uploadedFiles.map((file, i) => {
 		let ext: 'txt' | 'md' = 'txt';
@@ -67,29 +43,21 @@ function IndexPage() {
 		);
 	});
 
-	const onUploadFiles = () => {
-		setProcessingUpload(true);
-		const url = API_URL + '/documents';
-		const form = new FormData();
-		for (let i = 0; i < files.length; i++) {
-			form.append(`files[${i}]`, files[i]);
-		}
-		const options = {
-			method: 'POST',
-			body: form,
-			headers: {
-				'Content-Type': 'multipart/form-data'
-			}
-		};
-		protectedFetch(url, options).then(() => {
-			setUploadedFiles(files);
-			setFiles([]);
-			setShowUploadOverlay(false);
-			setProcessingUpload(false);
-		}).catch(err => {
-			alert(err);
-		});
-	};
+	let sourcesJSX;
+	if (answer) {
+		sourcesJSX = answer.sources.map((src, i) => (
+			<li 
+				className='mb-3' key={i}
+				onClick={() => {
+					setViewedSource(src);
+					setShowSourceOverlay(true);
+				}}
+			>
+				<img className='inline-block w-5 h-5 mr-3' src={CiteIcon} alt="Cite source" />
+				<button className='hover:text-gray-500'>{src.name}</button>
+			</li>
+		));
+	}
 
 	let mainContent;
 
@@ -121,7 +89,10 @@ function IndexPage() {
 					{uploadedFilesJSX}
 				</div>
 				<div>
-					<Button className='text-white px-5 py-2 rounded-full ml-auto xl:mx-auto block' bg='green'>
+					<Button 
+						className='text-white px-5 py-2 rounded-full ml-auto xl:mx-auto block' bg='green'
+						onClick={() => setShowUploadOverlay(true)}
+					>
 						upload{' '}
 						<img className='inline-block w-5 h-5' src={UploadIcon} alt="Upload icon" />
 					</Button>
@@ -166,15 +137,18 @@ function IndexPage() {
 			{
 				answer ?
 					<div>
-						<div className='mb-10'>
-							<h4 className='mb-1 text-2xl font-bold'>{answer.question}</h4>
+						<div className='mb-14'>
+							<h4 className='mb-2 text-2xl font-bold'>{answer.question}</h4>
 							<p>{answer.answer}</p>
 						</div>
 						<hr className='mb-5' />
 						<div>
-							<h4 className='mb-1 text-2xl font-bold'>
+							<h4 className='mb-2 text-2xl font-bold'>
 								Sources
 							</h4>
+							<ul>
+								{sourcesJSX}
+							</ul>
 						</div>
 					</div>
 					:
@@ -191,53 +165,10 @@ function IndexPage() {
 		<main className='pt-10 sm:pt-20 relative'>
 			<div className='container mx-auto px-5 max-w-xl'>
 				{mainContent}
-				<Overlay show={showUploadOverlay} className='max-w-2xl mx-auto px-5'>
-					<div className='bg-white py-10 px-5 sm:px-10 rounded-2xl mt-20 md:mt-40'>
-						<label htmlFor="document-upload">
-							<Button 
-								className='rounded-full px-5 sm:px-10 py-2 text-black text-lg text-center' bg='gray'
-								onClick={() => (FileInput.current as HTMLInputElement).click()}
-							>
-								upload documents{' '}
-								<img className='inline-block w-5 h-5' src={UploadDarkIcon} alt="Upload icon" />
-							</Button>
-						</label>
-						<input 
-							ref={FileInput}
-							className='hidden' type="file" name="document-upload" id="document-upload" 
-							multiple
-							onChange={e => {
-								const files = e.target.files;
-								if (files) {
-									const fileArray = [];
-									for (let i = 0; i < files.length; i++) {
-										const file = files[i];
-										if (ALLOWED_FILES.includes(file.type)) {
-											fileArray.push(file);
-										}
-									}
-									setFiles(fileArray);
-								}
-							}}
-						/>
-						<ul className='mt-10 h-[20rem] overflow-y-auto'>
-							{filesJSX}
-						</ul>
-						{
-							files.length > 0 ?
-								<Button 
-									className='text-white px-5 py-2 rounded-full mx-auto flex flex-row justify-between items-center sm:w-72' 
-									bg='green'
-									onClick={() => onUploadFiles()}
-								>
-									<span>ingest documents</span>
-									<img className='inline-block w-5 h-5' src={IngestIcon} alt="Ingest document icon" />
-								</Button>
-								:
-								null
-						}
-					</div>
-				</Overlay>
+				<UploadOverlay show={showUploadOverlay} onUploadSuccess={files => {
+					setUploadedFiles(files);
+					setShowUploadOverlay(false);
+				}} />
 			</div>
 		</main>
 	);

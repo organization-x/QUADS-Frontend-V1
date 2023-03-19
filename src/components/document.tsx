@@ -11,7 +11,7 @@ type Props = {
 };
 
 function Document({ name, className, ext }: Props) {
-	const icon = ext === 'txt' ? TextIcon : DocumentIcon; 
+	const icon = ext !== 'txt' ? TextIcon : DocumentIcon; 
 
 	return (
 		<div className={(className ? className : '') + ' px-3 py-2 rounded-full ' + s['border-gray']}>
