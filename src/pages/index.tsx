@@ -7,8 +7,11 @@ import Document from '../components/document';
 import UploadIcon from '../assets/upload.svg';
 import CiteIcon from '../assets/cite.svg';
 import UploadOverlay from './upload';
+import { API_URL, protectedFetch } from '../utils/fetch';
+import Loading from '../components/loading';
+import SourceDocOverlay from './source';
 
-type Source = {
+export type Source = {
 	name: string,
 	extract: string
 };
@@ -28,6 +31,27 @@ function IndexPage() {
 	const [showSourceOverlay, setShowSourceOverlay] = useState(false);
 	const [viewedSource, setViewedSource] = useState<Source>();
 
+	const onQuestionAsked = () => {
+		setProcessingAnswer(true);
+		const url = API_URL + '/query/';
+		const options = {
+			method: 'POST',
+			body: JSON.stringify({
+				question
+			}),
+			headers: {
+				'Content-Type': 'application/json'
+			}
+		};
+		protectedFetch<Answer>(url, options).then(res => {
+			setAnswer(res);
+			setProcessingAnswer(false);
+			setQuestion('');
+		}).catch(err => {
+			alert((err.message ? err.message : JSON.stringify(err)));
+		});
+	};
+
 	const uploadedFilesJSX = uploadedFiles.map((file, i) => {
 		let ext: 'txt' | 'md' = 'txt';
 		if (file.type === 'plain/markdown') {
@@ -45,7 +69,8 @@ function IndexPage() {
 
 	let sourcesJSX;
 	if (answer) {
-		sourcesJSX = answer.sources.map((src, i) => (
+		const sourceArray = answer.sources;
+		sourcesJSX = sourceArray.map((src, i) => (
 			<li 
 				className='mb-3' key={i}
 				onClick={() => {
@@ -110,25 +135,7 @@ function IndexPage() {
 					bg='green'
 					className='absolute top-2 right-2 w-8 h-8 text-white rounded-full pt-[0.1rem]'
 					onClick={() => {
-						setAnswer({
-							question: question,
-							answer: "I don't know",
-							sources: [
-								{
-									name: 'document_1.txt',
-									extract: 'Hello world'
-								},
-								{
-									name: 'document_2.txt',
-									extract: 'Hello world'
-								},
-								{
-									name: 'document_3.txt',
-									extract: 'Hello world'
-								},
-							]
-						});
-						setQuestion('');
+						onQuestionAsked();
 					}}
 				>
 					<FontAwesomeIcon icon={faArrowRight} />
@@ -157,7 +164,9 @@ function IndexPage() {
 		</>);
 	} else {
 		mainContent = (<>
-			<h4>Loading...</h4>
+			<h4 className="mb-3 text-xl text-center font-bold">Generating Answer</h4>
+			<Loading />
+			<p className="text-center mt-3">This can take a minute</p>
 		</>);
 	}
 
@@ -169,6 +178,11 @@ function IndexPage() {
 					setUploadedFiles(files);
 					setShowUploadOverlay(false);
 				}} />
+				<SourceDocOverlay 
+					show={showSourceOverlay}
+					source={viewedSource}
+					onClose={() => setShowSourceOverlay(false)}
+				/>
 			</div>
 		</main>
 	);

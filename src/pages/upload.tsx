@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import Button from "../components/button";
 import Overlay from "../components/overlay";
-import protectedFetch from '../utils/fetch';
+import { protectedFetch, API_URL } from '../utils/fetch';
 import UploadDarkIcon from '../assets/upload_dark.svg';
 import IngestIcon from '../assets/ingest.svg';
 import s from '../styles/index.module.scss';
@@ -13,8 +13,6 @@ type Props = {
 };
 
 const ALLOWED_FILES = ['text/plain', 'text/markdown'];
-
-const API_URL = import.meta.env.VITE_API_URL;
 
 function UploadOverlay({ show, onUploadSuccess }: Props) {
 	const [files, setFiles] = useState<File[]>([]);
@@ -40,30 +38,22 @@ function UploadOverlay({ show, onUploadSuccess }: Props) {
 
 	const onUploadFiles = () => {
 		setProcessingUpload(true);
-		// const url = API_URL + '/documents';
-		// const form = new FormData();
-		// for (let i = 0; i < files.length; i++) {
-		// 	form.append(`files[${i}]`, files[i]);
-		// }
-		// const options = {
-		// 	method: 'POST',
-		// 	body: form,
-		// 	headers: {
-		// 		'Content-Type': 'multipart/form-data'
-		// 	}
-		// };
-		// protectedFetch(url, options).then(() => {
-		// 	setUploadedFiles(files);
-		// 	setFiles([]);
-		// 	setShowUploadOverlay(false);
-		// 	setProcessingUpload(false);
-		// }).catch(err => {
-		// 	alert(err);
-		// });
-
-		onUploadSuccess(files);
-		setFiles([]);
-		setProcessingUpload(false);
+		const url = API_URL + '/documents/';
+		const form = new FormData();
+		for (let i = 0; i < files.length; i++) {
+			form.append('files', files[i]);
+		}
+		const options = {
+			method: 'POST',
+			body: form
+		};
+		protectedFetch(url, options).then(() => {
+			onUploadSuccess(files);
+			setFiles([]);
+			setProcessingUpload(false);
+		}).catch(err => {
+			alert((err.message ? err.message : JSON.stringify(err)));
+		});
 	};
 
 	let mainContent;
