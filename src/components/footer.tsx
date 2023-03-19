@@ -6,7 +6,7 @@ function Footer() {
 		<div className={s.footer + ' py-5 w-full sm:fixed sm:bottom-0'}>
 			<div className='container max-w-2xl mx-auto px-5'>
 				<p className={'mb-3 ' + s['gray-muted']}>
-					quads (query any data set) takes q&a to the next level. quants ai is not liable for content generated. do not enter personal information.
+					quads (query any data set) takes q&a to the next level. quads ai is not liable for content generated. do not enter personal information.
 				</p>
 				<hr className={'mb-3 ' + s['border-gray-dark']} />
 				<div>
